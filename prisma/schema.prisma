@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Partner {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(255)
+  isActive  Boolean  @default(true)
+  img       String?
+  token     String?
+  mwId      Int
+  perms     Int      @default(111111) @db.Int // YESTERDAY WEEKLY MONTHLY YEARLY REALTIME PUSH
+  createdAt DateTime @default(now())
+  creator   User     @relation("createdPartner", fields: [createdBy], references: [id])
+  createdBy Int
+  updatedAt DateTime @default(now()) @updatedAt
+  updatedBy Int?
+  updator   User?    @relation("UpdatedPartner", fields: [updatedBy], references: [id])
+  logs      Log[]
+  Log       Log[]    @relation("partnerLogger")
+  roles     Role?    @relation("partnerRole")
+
+}
+
+enum Channel {
+  TV
+  FM
+  NONE
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  email           String    @unique
+  name            String?
+  createdPartners Partner[] @relation("createdPartner")
+  updatedPartners Partner[] @relation("UpdatedPartner")
+  password        String
+  isActive        Boolean   @default(true)
+  perms           Int       @default(1111) @db.Int // CREATE READ UPDATE DELETE
+  createdAt       DateTime  @default(now())
+  createdBy       Int?
+  created         User?     @relation("userCreation", fields: [createdBy], references: [id])
+  creator         User?     @relation("userCreation")
+  updatedAt       DateTime  @default(now()) @updatedAt
+  logs            Log[]
+  Log             Log[]     @relation("userLogger")
+  roles           Role?     @relation("userRole")
+}
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  type      String   @db.VarChar(100)
+  time      DateTime @default(now())
+  userId    Int?
+  partnerId Int?
+  logCode   Int?
+  logCode2  Int?
+  param     String?  @db.LongText
+  param2    String?  @db.LongText
+  user      User?    @relation("userLogger", fields: [userId], references: [id])
+  partner   Partner? @relation("partnerLogger", fields: [partnerId], references: [id])
+  Partner   Partner? @relation(fields: [partnerId], references: [id])
+  User      User?    @relation(fields: [userId], references: [id])
+}
+
+//DONOT CHNAGE THE FIRST THREE LINES, THEY ARE VERY DEPENDANT ON SOME CODE
+model Role {
+  id            Int      @id @default(autoincrement())
+  userId        Int?
+  partnerId     Int?
+  dataAccurancy Int      @default(1)
+  channel       String   @default("") @db.VarChar(100)
+  epg           Int      @default(1)
+  vod           Int      @default(1)
+  crudUsers     Int      @default(1)
+  reports       Int      @default(1)
+  marketing     Int      @default(1)
+  crudPartners  Int      @default(1)
+  User          User?    @relation("userRole", fields: [userId], references: [id])
+  Partner       Partner? @relation("partnerRole", fields: [partnerId], references: [id])
+}
