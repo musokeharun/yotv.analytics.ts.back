@@ -17,6 +17,7 @@ import {UserMain} from "../../helpers/interfaces";
 import bcrypt from "bcryptjs";
 import {digestRoles} from "../../auth/auth-utils";
 import Funnel from "../apps/funnel";
+import {getDurationObject} from "@shared/constants";
 
 const prismaClient = new PrismaClient();
 
@@ -220,21 +221,14 @@ Admin.post("/funnel", (async (req, res) => {
         // }
 
         const channelsArray = channels.split(",");
-        let duration = toDateTime.diff(fromDateTime, ["hours", "minutes", "days", "months"]).toObject() || {};
-        const {days, hours, minutes, months} = duration;
+        let duration = toDateTime.diff(fromDateTime).toObject() || {};
+        const durationObject = getDurationObject(parseInt(String(duration.milliseconds || 0)));
 
-        // const result = {};
-        // if (!duration.days) {
-        //PROVIDE ONLY THAT DURATION
-        // let data = await getDataSource(channelsArray, fromDateTime, toDateTime, Interval.MINUTE_15, fieldType, FieldType.DEVICE_ID);
-        // res.send({data, meta: {interval: Interval.MINUTE_15}})
-        // res.end();
-        // }
-        //THAT PERIOD
+
         let {
             thtPeriodInterval,
             thtPeriod
-        } = await Funnel(interval, days, hours, channelsArray, type, fromDateTime, toDateTime);
+        } = await Funnel(interval,durationObject, channelsArray, type, fromDateTime, toDateTime);
 
         console.log(fromDateTime.toSQL(), toDateTime.toSQL(), dateTime.toSQL(), duration, channelsArray);
         res.json({

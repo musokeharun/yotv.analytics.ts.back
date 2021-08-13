@@ -13,6 +13,7 @@ import {processAndResult} from "../query";
 import Joi from "joi";
 import Funnel from "../apps/funnel";
 import {JoiOrPrismaError} from "../../utils/validate";
+import {getDurationObject} from "@shared/constants";
 
 const Partner = Router();
 const prismaClient = new PrismaClient();
@@ -260,13 +261,15 @@ Partner.post("/funnel", (async (req, res) => {
         let fromDateTime = DateTime.fromMillis(parseInt(from));
         let toDateTime = DateTime.fromMillis(parseInt(to));
 
-        let duration = toDateTime.diff(fromDateTime, ["hours", "minutes", "days", "months"]).toObject() || {};
-        const {days, hours, minutes, months} = duration;
+        let duration = toDateTime.diff(fromDateTime).toObject() || {};
+        const durationObject = getDurationObject(parseInt(String(duration.milliseconds || 0)));
+
+        console.log("Duration", durationObject);
 
         let {
             thtPeriodInterval,
             thtPeriod
-        } = await Funnel(interval, days, hours, [partner.name], type, fromDateTime, toDateTime);
+        } = await Funnel(interval, durationObject, [partner.name], type, fromDateTime, toDateTime);
 
         console.log(fromDateTime.toSQL(), toDateTime.toSQL(), dateTime.toSQL(), duration, partner);
         res.json({

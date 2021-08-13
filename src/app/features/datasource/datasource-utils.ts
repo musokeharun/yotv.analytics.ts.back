@@ -41,8 +41,10 @@ export enum Interval {
     MINUTE_15 = "15m",
     HOUR = "1h",
     DAY = "1d",
-    WEEK = "1w",
-    MONTH = "1m"
+    WEEK = "14d",
+    MONTH = "30d",
+    YEAR = "360d",
+    QUARTER = "90d"
 }
 
 export const getType = (type: string) => {
