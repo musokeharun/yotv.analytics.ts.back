@@ -4,12 +4,11 @@ import bcrypt from "bcryptjs";
 import config from "config";
 import {PrismaClient, Prisma} from '@prisma/client'
 
-import {UserMini} from "../helpers/interfaces";
 import {createExpiry} from "./jwt";
 import {DateTime} from "luxon";
-import {processSql, processStructure} from "../features/query";
-import {isAxiosErrorRes} from "../utils/http";
-import {stats} from "../helpers/cache/cache";
+import {UserMini} from "../app/helpers/interfaces";
+import {processSql, processStructure} from "../app/features/query";
+import {isAxiosErrorRes} from "../app/utils/http";
 
 const Auth = Router();
 const {zone} = config.get("Time");
@@ -263,7 +262,7 @@ Auth.post("/list", async (req, res) => {
 })
 
 Auth.post("/stats", (req, res) => {
-    res.json(stats);
+    res.json({auth: ""});
 })
 
 export default Auth;

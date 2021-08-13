@@ -6,14 +6,14 @@ import config from "config";
 import {PartnerToken} from "../../helpers/interfaces";
 import {Realtime} from "../apps/realtime";
 import {Dashboard} from "../apps/dashboard";
-import {verify} from "../../auth/jwt";
 import {LogCode, logger, LogType} from "../../helpers/activity";
 import {FieldType} from "../datasource/datasource-utils";
 import {processAndResult} from "../query";
 import Joi from "joi";
 import Funnel from "../apps/funnel";
 import {JoiOrPrismaError} from "../../utils/validate";
-import {getDurationObject} from "@shared/constants";
+import {getDurationObject} from "../../../shared/constants";
+import {verify} from "../../../auth/jwt";
 
 const Partner = Router();
 const prismaClient = new PrismaClient();

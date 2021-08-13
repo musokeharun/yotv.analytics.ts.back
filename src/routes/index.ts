@@ -1,6 +1,6 @@
-import { Router } from 'express';
-import auth from 'src/app/auth';
-import Partner from 'src/app/features/partner';
+import {Router} from 'express';
+import auth from '../auth';
+import Partner from '../app/features/partner';
 import Admin from "../app/features/admin";
 import Vod from "../app/features/vod";
 import Query from "../app/features/query";

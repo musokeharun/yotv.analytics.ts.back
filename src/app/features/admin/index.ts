@@ -12,12 +12,12 @@ import {Dashboard} from "../apps/dashboard";
 import {Realtime} from "../apps/realtime";
 import {JsonWebTokenError, TokenExpiredError} from "jsonwebtoken";
 import {PrismaClient} from "@prisma/client";
-import {createExpiry, verify} from "../../auth/jwt";
 import {UserMain} from "../../helpers/interfaces";
 import bcrypt from "bcryptjs";
-import {digestRoles} from "../../auth/auth-utils";
 import Funnel from "../apps/funnel";
-import {getDurationObject} from "@shared/constants";
+import {getDurationObject} from "../../../shared/constants";
+import {createExpiry, verify} from "../../../auth/jwt";
+import {digestRoles} from "../../../auth/auth-utils";
 
 const prismaClient = new PrismaClient();
 
@@ -228,7 +228,7 @@ Admin.post("/funnel", (async (req, res) => {
         let {
             thtPeriodInterval,
             thtPeriod
-        } = await Funnel(interval,durationObject, channelsArray, type, fromDateTime, toDateTime);
+        } = await Funnel(interval, durationObject, channelsArray, type, fromDateTime, toDateTime);
 
         console.log(fromDateTime.toSQL(), toDateTime.toSQL(), dateTime.toSQL(), duration, channelsArray);
         res.json({

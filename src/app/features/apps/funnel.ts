@@ -1,7 +1,7 @@
 import {FieldType, getType, Interval, StreamType} from "../datasource/datasource-utils";
 import {DateTime} from "luxon";
 import {getDataSource} from "../admin";
-import logger from "@shared/Logger";
+import logger from "../../../shared/Logger";
 
 const returnInterval = (value: number, interval: Interval, expected: number) => {
     if (value && value >= expected) {

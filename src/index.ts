@@ -1,6 +1,6 @@
-import './pre-start'; // Must be the first import
-import app from '@server';
-import logger from '@shared/Logger';
+import './pre-start';
+import app from "./Server";
+import logger from "./shared/Logger"; // Must be the first import
 
 
 // Start the server
