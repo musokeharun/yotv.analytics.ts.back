@@ -29,9 +29,8 @@ if (process.env.NODE_ENV === "development") {
 
 // Security
 if (process.env.NODE_ENV === "production") {
-  app.use(helmet());
+  //  app.use(helmet());
 }
-
 app.use(cors());
 
 // Add APIs
