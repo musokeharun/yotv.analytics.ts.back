@@ -268,7 +268,7 @@ Partner.post("/funnel", (async (req, res) => {
 
         let {
             thtPeriodInterval,
-            thtPeriod
+            thtPeriod,days,hours
         } = await Funnel(interval, durationObject, [partner.name], type, fromDateTime, toDateTime);
 
         console.log(fromDateTime.toSQL(), toDateTime.toSQL(), dateTime.toSQL(), duration, partner);
@@ -276,7 +276,9 @@ Partner.post("/funnel", (async (req, res) => {
             data: thtPeriod,
             meta: {
                 interval: thtPeriodInterval,
-                ...duration
+                ...duration,
+                days,
+                hours
             }
         }).end();
         return;

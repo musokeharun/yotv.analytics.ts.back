@@ -29,7 +29,7 @@ const Funnel = async (interval: Interval, durationObject: any, channelsArray: Ar
 
     let fieldType = channelsArray.length > 1 ? FieldType.CHANNELS : getType(type || "");
     let thtPeriod = await getDataSource(channelsArray, fromDateTime, toDateTime, thtPeriodInterval.toString(), fieldType, FieldType.DEVICE_ID, roles);
-    return {thtPeriodInterval, thtPeriod};
+    return {thtPeriodInterval, thtPeriod,days,hours};
 }
 
 export default Funnel
