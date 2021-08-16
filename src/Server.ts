@@ -30,8 +30,9 @@ if (process.env.NODE_ENV === "development") {
 // Security
 if (process.env.NODE_ENV === "production") {
   app.use(helmet());
-  app.use(cors());
 }
+
+app.use(cors());
 
 // Add APIs
 app.use("/api", BaseRouter);
