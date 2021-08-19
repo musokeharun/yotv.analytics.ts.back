@@ -26,3 +26,23 @@ export const getDurationObject = (milliseconds: number) => {
         seconds: Math.round(milliseconds / MILLISECONDS.SECOND),
     }
 }
+
+// Strings
+export const loginFailedErr = 'Login failed';
+
+// Numbers
+export const pwdSaltRounds = 12;
+
+// Cookie Properties
+export const cookieProps = Object.freeze({
+    key: 'YoTvChannels',
+    secret: process.env.COOKIE_SECRET,
+    options: {
+        httpOnly: true,
+        signed: true,
+        path: (process.env.COOKIE_PATH),
+        maxAge: Number(process.env.COOKIE_EXP || 86400),
+        domain: (process.env.COOKIE_DOMAIN),
+        secure: (process.env.SECURE_COOKIE === 'true'),
+    },
+});

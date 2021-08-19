@@ -31,7 +31,6 @@ export const otherConstData = (channel: Array<string>, vendor: Array<string>, de
     let castTypes = createEscapedStringFromArray(types);
     let streams = createEscapedStringFromArray(streamTypes);
 
-
     const cardinalitySection = cardinality ? {[lastAgg]: {"cardinality": {"field": cardinalityField}}} : {};
     const histogram = addHistogram ? {
         [nextAgg]: {

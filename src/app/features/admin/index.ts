@@ -10,21 +10,20 @@ import {processAndResult} from "../query";
 import {getChannelIds} from "../query/query-utils";
 import {Dashboard} from "../apps/dashboard";
 import {Realtime} from "../apps/realtime";
-import {JsonWebTokenError, TokenExpiredError} from "jsonwebtoken";
 import {PrismaClient} from "@prisma/client";
-import {UserMain} from "../../helpers/interfaces";
 import bcrypt from "bcryptjs";
 import Funnel from "../apps/funnel";
 import {getDurationObject} from "../../../shared/constants";
 import {createExpiry, verify} from "../../../auth/jwt";
 import {digestRoles} from "../../../auth/auth-utils";
+import {authMw} from "../../../routes/middleware";
+import {getDateTimeNow} from "../../../shared/functions";
 
 const prismaClient = new PrismaClient();
 
 const Admin = Router();
 
-const {zone} = config.get("Time");
-const dateTime = DateTime.now().setZone(zone);
+const dateTime = getDateTimeNow;
 let secondsToExpire = (30 * 60);
 
 const {salt} = config.get("Auth.encrypt");
@@ -89,72 +88,11 @@ const getRangeEpg = async (from: number, to: number, channels: Array<string>) =>
 
 }
 
-Admin.use(async (req, res, next) => {
-    // TODO POPULATE ROLES OF THE USERS
-    try {
-        let {x_admin_stats_token: token} = req.headers;
-        if (!token) {
-            res.status(403).send({user: "no such user found"}).end();
-            return;
-        }
-
-        let payload = <UserMain>verify(<string>token);
-
-        let userExists = await prismaClient.user.findFirst({
-            where: {
-                email: payload.email,
-            },
-            select: {
-                id: true,
-                email: true,
-                password: true,
-                isActive: true,
-                perms: true,
-                roles: true
-            }
-        });
-
-        if (!userExists) {
-            res.send({user: "User not found"}).status(404).end();
-            return;
-        }
-
-        if (!userExists.isActive) {
-            res.send({user: "User not active"}).status(404).end();
-            return;
-        }
-
-        // TODO GET ROLES OBJECT
-        res.locals.user = userExists;
-        //console.log("Roles", userExists.roles);
-        next();
-
-    } catch (e) {
-
-        if (e instanceof TokenExpiredError) {
-            const {name, message, expiredAt} = e;
-            res.status(403).send({token: "Token expired,Please login."});
-            res.end()
-            return;
-        } else if (e instanceof JsonWebTokenError) {
-            const {name, message} = e;
-            res.status(403).send({token: "Token not allowed,Please login."});
-            res.end()
-            return;
-        }
-
-        console.log("Token Error", e)
-        res.status(404).send({token: "Could not process"});
-        res.end();
-        return;
-    }
-})
-
 Admin.all("/", ((req, res) => {
     res.send("Admin on board");
 }))
 
-Admin.post("/epg", async (req, res) => {
+Admin.post("/epg", authMw, async (req, res) => {
 
     try {
         const schema = Joi.object({
@@ -190,7 +128,7 @@ Admin.post("/epg", async (req, res) => {
 
 })
 
-Admin.post("/funnel", (async (req, res) => {
+Admin.post("/funnel", authMw, (async (req, res) => {
 
     const {user} = res.locals;
 
@@ -250,7 +188,7 @@ Admin.post("/funnel", (async (req, res) => {
     }
 }))
 
-Admin.post("/realtime", async (req, res) => {
+Admin.post("/realtime", authMw, async (req, res) => {
 
     const {list, count} = req.query;
     const {user} = res.locals;
@@ -287,7 +225,7 @@ Admin.post("/realtime", async (req, res) => {
     }
 })
 
-Admin.post("/dashboard", async (req, res) => {
+Admin.post("/dashboard", authMw, async (req, res) => {
 
     const {channel, type} = req.body;
     const {user} = res.locals;
@@ -316,7 +254,7 @@ Admin.post("/dashboard", async (req, res) => {
     }
 })
 
-Admin.post("/partner/token", async (req, res) => {
+Admin.post("/partner/token", authMw, async (req, res) => {
 
     const {user} = res.locals;
     // TODO CHECK IF USER HAS CRUD PERMISSIONS
@@ -396,7 +334,7 @@ Admin.post("/partner/token", async (req, res) => {
 
 });
 
-Admin.post("/partner/save", (async (req, res) => {
+Admin.post("/partner/save", authMw, (async (req, res) => {
     try {
         const {user} = res.locals;
 
@@ -497,7 +435,7 @@ Admin.post("/partner/save", (async (req, res) => {
 
 }))
 
-Admin.all("/partner/list", async (req, res) => {
+Admin.all("/partner/list", authMw, async (req, res) => {
     try {
 
         const {user} = res.locals;
@@ -536,7 +474,7 @@ Admin.all("/partner/list", async (req, res) => {
     }
 })
 
-Admin.all("/users/list?", async (req, res) => {
+Admin.all("/users/list?", authMw, async (req, res) => {
     try {
 
         const {user} = res.locals;
@@ -572,7 +510,7 @@ Admin.all("/users/list?", async (req, res) => {
     }
 })
 
-Admin.post("/users/save", (async (req, res) => {
+Admin.post("/users/save", authMw, (async (req, res) => {
     try {
         const {user} = res.locals;
 

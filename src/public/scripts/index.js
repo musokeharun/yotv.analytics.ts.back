@@ -18,7 +18,7 @@ function displayUsers() {
                 allUsersAnchor.innerHTML += getUserDisplayEle(user);
             });
         });
-};
+}
 
 
 function getUserDisplayEle(user) {

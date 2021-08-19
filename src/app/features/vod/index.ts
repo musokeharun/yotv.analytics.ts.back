@@ -77,9 +77,9 @@ Vod.post("/report", async (req, res) => {
 
     await (async (respond: any) => {
 
-        let startDate = DateTime.fromMillis(Number.parseInt(from), {zone});
+        let startDate = DateTime.fromMillis(Number.parseInt(from), {zone}).startOf("day");
         let start = startDate.toMillis();
-        let endDate = DateTime.fromMillis(Number.parseInt(to), {zone});
+        let endDate = DateTime.fromMillis(Number.parseInt(to), {zone}).endOf("day");
         let end = endDate.toMillis();
 
         console.log(startDate.toSQL(), endDate.toSQL(), startDate.zoneName);

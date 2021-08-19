@@ -14,77 +14,12 @@ import Funnel from "../apps/funnel";
 import {JoiOrPrismaError} from "../../utils/validate";
 import {getDurationObject} from "../../../shared/constants";
 import {verify} from "../../../auth/jwt";
+import {authPartner} from "../../../routes/middleware";
 
 const Partner = Router();
 const prismaClient = new PrismaClient();
 const {zone} = config.get("Time");
 const dateTime = DateTime.now().setZone(zone);
-
-// TODO CHANGE MIDDLE WARE FUNCTION ---- EXTRACT PARTNER DATA INTO MIDDLEWARE
-Partner.use((async (req, res, next) => {
-
-    if (req.path.startsWith("/login")) {
-        next();
-        return;
-    }
-
-    try {
-        let {x_partner_stats_token: token} = req.headers;
-        if (!token) {
-            res.status(403).send({error: "no such user found"}).end();
-            return;
-        }
-
-        let payload = <PartnerToken>verify(<string>token);
-
-        let partnerExists = await prismaClient.partner.findFirst({
-            where: {
-                name: payload.name,
-            },
-            select: {
-                id: true,
-                isActive: true,
-                mwId: true,
-                roles: true,
-                name: true
-            }
-        });
-
-        if (!partnerExists) {
-            res.send({error: "Partner not found"}).status(404).end();
-            return;
-        }
-
-        if (!partnerExists.isActive) {
-            res.send({error: "Partner not active"}).status(404).end();
-            return;
-        }
-
-        // TODO GET ROLES OBJECT
-        res.locals.partner = partnerExists;
-        //console.log("Roles", partnerExists.roles);
-        next();
-
-    } catch (e) {
-
-        if (e instanceof TokenExpiredError) {
-            const {name, message, expiredAt} = e;
-            res.status(403).send({error: "Token expired,Please contact administrator."});
-            res.end()
-            return;
-        } else if (e instanceof JsonWebTokenError) {
-            const {name, message} = e;
-            res.status(403).send({error: "Token not allowed,Please contact administrator."});
-            res.end()
-            return;
-        }
-
-        console.log("Token Error", e)
-        res.status(404).send({error: "Could not process"});
-        res.end();
-        return;
-    }
-}))
 
 Partner.all("/", (req, res) => res.status(403).json({msg: "Not Allowed", status: 403}));
 
@@ -176,7 +111,7 @@ Partner.post("/login", async (req, res) => {
 
 })
 
-Partner.all("/dashboard", async (req, res) => {
+Partner.all("/dashboard", authPartner, async (req, res) => {
 
     const {partner} = res.locals;
 
@@ -196,16 +131,19 @@ Partner.all("/dashboard", async (req, res) => {
     }
 })
 
-Partner.all("/realtime", async (req, res) => {
+Partner.all("/realtime", authPartner, async (req, res) => {
 
     const {list, count} = req.query;
     const {partner} = res.locals;
 
     try {
 
+        let similarChannels = await processAndResult(dateTime.toMillis(), dateTime.toMillis(), `select channels_type,channels_name from channels where channels_active=1 AND channels_type IN(select channels_type from channels where channels_name="${partner.name}");`)
+        console.log("Similar Channels", similarChannels.map(({channels_name}) => channels_name));
+
         let realtime = await Realtime(dateTime, [partner.name], {
-            list: !!list, count: !!count
-        }, FieldType.STREAM_TYPE, partner.roles);
+            list: true, count: !!count
+        }, FieldType.STREAM_TYPE, partner.roles, similarChannels.map(({channels_name}) => channels_name));
         res.json(realtime);
 
     } catch (e) {
@@ -219,7 +157,7 @@ Partner.all("/realtime", async (req, res) => {
     }
 })
 
-Partner.post("/epg", async (req, res) => {
+Partner.post("/epg", authPartner, async (req, res) => {
 
     const {partner} = res.locals;
     const {time} = req.body;
@@ -243,7 +181,7 @@ Partner.post("/epg", async (req, res) => {
 
 })
 
-Partner.post("/funnel", (async (req, res) => {
+Partner.post("/funnel", authPartner, (async (req, res) => {
 
     const {partner} = res.locals;
 
@@ -268,7 +206,7 @@ Partner.post("/funnel", (async (req, res) => {
 
         let {
             thtPeriodInterval,
-            thtPeriod,days,hours
+            thtPeriod, days, hours
         } = await Funnel(interval, durationObject, [partner.name], type, fromDateTime, toDateTime);
 
         console.log(fromDateTime.toSQL(), toDateTime.toSQL(), dateTime.toSQL(), duration, partner);
@@ -292,6 +230,5 @@ Partner.post("/funnel", (async (req, res) => {
         res.end();
     }
 }))
-
 
 export default Partner;

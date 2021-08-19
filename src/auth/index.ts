@@ -4,17 +4,22 @@ import bcrypt from "bcryptjs";
 import config from "config";
 import {PrismaClient, Prisma} from '@prisma/client'
 
-import {createExpiry} from "./jwt";
 import {DateTime} from "luxon";
 import {UserMini} from "../app/helpers/interfaces";
 import {processSql, processStructure} from "../app/features/query";
 import {isAxiosErrorRes} from "../app/utils/http";
+import {cookieProps} from "../shared/constants";
+import {JwtService} from "../shared/JwtService";
+import StatusCodes from "http-status-codes";
+import {authMw} from "../routes/middleware";
 
 const Auth = Router();
 const {zone} = config.get("Time");
 const dateTime = DateTime.now().setZone(zone);
 
+const jwtService = new JwtService();
 const prismaClient = new PrismaClient();
+const {BAD_REQUEST, OK, UNAUTHORIZED} = StatusCodes;
 
 const validate = async (res: Response, {email, password}: UserMini): Promise<UserMini | undefined> => {
     try {
@@ -63,12 +68,27 @@ Auth.all("/", (req: Request, res: Response) => {
 });
 
 Auth.post("/register", (async (req, res) => {
-    const {email, password} = req.body;
+    const {email, password, name} = req.body;
 
     try {
         const value = await validate(res, {email, password});
         if (!value) return;
         const {salt} = config.get("Auth.encrypt");
+
+        let userExists = await prismaClient.user.findFirst({
+            where: {
+                email
+            },
+            select: {
+                id: true,
+            }
+        });
+
+        if (userExists) {
+            res.status(404).send({email: "User already exists."});
+            res.end();
+            return;
+        }
 
         let hash = bcrypt.hashSync(password, salt,);
         console.log(hash);
@@ -77,6 +97,7 @@ Auth.post("/register", (async (req, res) => {
             select: {
                 id: true,
                 email: true,
+                name: true,
                 isActive: true,
                 roles: {
                     select: {
@@ -97,6 +118,7 @@ Auth.post("/register", (async (req, res) => {
             data: {
                 email,
                 password: hash,
+                name
             }
         });
         if (!user.roles) {
@@ -146,8 +168,6 @@ Auth.post("/login", async (req, res) => {
     try {
         const value = await validate(res, {email, password});
         if (!value) return;
-
-        const {secret} = config.get("Auth.jwt");
 
         let userExists = await prismaClient.user.findFirst({
             where: {
@@ -208,15 +228,18 @@ Auth.post("/login", async (req, res) => {
         // @ts-ignore
         delete userExists.id;
 
-        let jwt = createExpiry({
+        // Setup Admin Cookie
+        const jwt = await jwtService.getJwt({
             ...userExists,
             ip: req.ip,
             createdAt: new Date().getTime(),
             modifiedAt: new Date().getTime(),
-        }, '12h');
+        });
+        // const {key, options} = cookieProps;
+        // res.cookie(key, jwt, options);
+        // Return
+        return res.status(OK).send(jwt).end();
 
-        res.send(jwt);
-        res.end();
     } catch (err) {
         if (err instanceof Prisma.PrismaClientKnownRequestError) {
             // @ts-ignore
@@ -236,7 +259,7 @@ Auth.post("/login", async (req, res) => {
 
 })
 
-Auth.post("/list", async (req, res) => {
+Auth.post("/list", authMw, async (req, res) => {
 
     let sql = "SELECT channels_name as name, channels_id as id,channels_logo as logo FROM channels WHERE channels_active = 1";
 
@@ -263,6 +286,12 @@ Auth.post("/list", async (req, res) => {
 
 Auth.post("/stats", (req, res) => {
     res.json({auth: ""});
+})
+
+Auth.post("logout", authMw, (req: Request, res: Response) => {
+    const {key, options} = cookieProps;
+    res.clearCookie(key, options);
+    return res.status(OK).end();
 })
 
 export default Auth;

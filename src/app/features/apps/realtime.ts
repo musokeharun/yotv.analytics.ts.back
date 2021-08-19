@@ -9,11 +9,11 @@ import CacheService from "../../helpers/cache/service";
 const ttl = 60 * 5;
 const cache = new CacheService(ttl);
 
-export const Realtime = async (dateTime: DateTime, channels: Array<string>, params: any, fieldType = FieldType.STREAM_TYPE, roles?: any): Promise<any | Error> => {
+export const Realtime = async (dateTime: DateTime, channels: Array<string>, params: any, fieldType = FieldType.STREAM_TYPE, roles?: any, otherChannels: string[] = []): Promise<any | Error> => {
     const {list, count} = params;
 
     let now = dateTime.toMillis();
-    let earlier = dateTime.minus({minutes: 55}).toMillis();
+    let earlier = dateTime.minus({minutes: 30}).toMillis();
 
     let epg: any = {};
     let ids = await getChannelIds(dateTime, channels, false);
@@ -47,7 +47,7 @@ export const Realtime = async (dateTime: DateTime, channels: Array<string>, para
         epg['count'] = epgCountVar[0] ? epgCountVar[0]['total'] : 0;
     }
 
-    //last 10 mines category streamTypes
+    //last 10 mins category streamTypes
     let payload = otherConstData(
         channels,
         enumAllValues(Vendor),
@@ -56,7 +56,7 @@ export const Realtime = async (dateTime: DateTime, channels: Array<string>, para
         enumAllValues(StreamType, (roles && !roles.dataAccurancy) ? StreamType.VOD : ""),
         earlier.toString(),
         now.toString(),
-        "5m",
+        "1m",
         fieldType,
         true,
         true,
@@ -64,7 +64,7 @@ export const Realtime = async (dateTime: DateTime, channels: Array<string>, para
         FieldType.DEVICE_ID
     );
 
-    let channelsPayload = otherConstData([],
+    let channelsPayload = otherConstData(otherChannels,
         enumAllValues(Vendor),
         enumAllValues(DeviceType),
         enumAllValues(Type),
@@ -78,6 +78,7 @@ export const Realtime = async (dateTime: DateTime, channels: Array<string>, para
         FieldType.TIMESTAMP,
         FieldType.DEVICE_ID
     );
+    console.log(JSON.stringify(channelsPayload));
     // @ts-ignore
     let query = channelsPayload.query.bool.filter[1]['query_string'].query;
     let queries = query.split(" AND ");
@@ -86,15 +87,18 @@ export const Realtime = async (dateTime: DateTime, channels: Array<string>, para
     //console.log("Channel Payload", queries[0]);
 
 
-    let channelsDataSourceKey = `KEY_CHANNEL_LIST_DATASOURCE_${dateTime.year}_${dateTime.month}_${dateTime.day}_${channels.sort().join("_")}`;
-    let channelStatsVar: any = await cache.get(channelsDataSourceKey, processData(channelsPayload));
+    // let channelsDataSourceKey = `KEY_CHANNEL_LIST_DATASOURCE_${dateTime.year}_${dateTime.month}_${dateTime.day}_${channels.sort().join("_")}`;
+    let channelStatsVar: any = await processData(channelsPayload); // cache.get(channelsDataSourceKey, processData(channelsPayload));
     let channelStats = [];
     if (channelStatsVar) {
         channelStats = channelStatsVar.map((data: any) => processBucket(data))
+        if (otherChannels.length) {
+            channelStats = channelStats.filter((dataSource: any) => otherChannels.includes(dataSource.key))
+        }
     }
 
-    let realTimeDataSourceKey = `KEY_REAL_TIME_DATASOURCE_${dateTime.year}_${dateTime.month}_${dateTime.day}_${channels.sort().join("_")}`;
-    let dataSourcesVar: any = await cache.get(realTimeDataSourceKey, processData(payload));
+    // let realTimeDataSourceKey = `KEY_REAL_TIME_DATASOURCE_${dateTime.year}_${dateTime.month}_${dateTime.day}_${channels.sort().join("_")}`;
+    let dataSourcesVar: any = await processData(payload); // cache.get(realTimeDataSourceKey, processData(payload));
     let dataSources = [];
     if (dataSourcesVar) {
         dataSources = dataSourcesVar.map((data: any) => processBucket(data))
