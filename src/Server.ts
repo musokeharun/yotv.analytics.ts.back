@@ -5,16 +5,16 @@ import helmet from 'helmet';
 import cors from "cors";
 
 
-import express, {NextFunction, Request, Response} from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
 import 'express-async-errors';
 
 import BaseRouter from './routes';
 import logger from "./shared/Logger";
-import {cookieProps} from "./shared/constants";
 
 const app = express();
-const {BAD_REQUEST} = StatusCodes;
+const { BAD_REQUEST } = StatusCodes;
+
 
 
 /************************************************************************************
@@ -23,8 +23,7 @@ const {BAD_REQUEST} = StatusCodes;
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
-app.use(cookieParser(cookieProps.secret));
-
+app.use(cookieParser());
 
 // Show routes called in console during development
 if (process.env.NODE_ENV === 'development') {
@@ -48,6 +47,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
         error: err.message,
     });
 });
+
 
 
 /************************************************************************************
