@@ -5,15 +5,20 @@ import {enumAllValues, otherConstData, processBucket, processData} from "../data
 import {DeviceType, FieldType, Interval, StreamType, Type, Vendor} from "../datasource/datasource-utils";
 import {getChannelIds, getEqualOrIn} from "../query/query-utils";
 import CacheService from "../../helpers/cache/service";
+import config from "config";
 
 const ttl = 60 * 5;
 const cache = new CacheService(ttl);
+const {zone} = config.get("Time");
 
 export const Realtime = async (dateTime: DateTime, channels: Array<string>, params: any, fieldType = FieldType.STREAM_TYPE, roles?: any, otherChannels: string[] = []): Promise<any | Error> => {
     const {list, count} = params;
 
-    let now = dateTime.toMillis();
-    let earlier = dateTime.minus({minutes: 30}).toMillis();
+    let time = DateTime.now();
+    let now = time.setZone(zone).toMillis();
+    let earlier = time.minus({minutes: 30}).toMillis();
+    console.log("Current Date",new Date(now).toLocaleString());
+    console.log(new Date().toLocaleString());
 
     let epg: any = {};
     let ids = await getChannelIds(dateTime, channels, false);
@@ -61,7 +66,7 @@ export const Realtime = async (dateTime: DateTime, channels: Array<string>, para
         true,
         true,
         FieldType.TIMESTAMP,
-        FieldType.DEVICE_ID
+        FieldType.PROFILE_ID,
     );
 
     let channelsPayload = otherConstData(otherChannels,
@@ -76,9 +81,9 @@ export const Realtime = async (dateTime: DateTime, channels: Array<string>, para
         true,
         true,
         FieldType.TIMESTAMP,
-        FieldType.DEVICE_ID
+        FieldType.DEVICE_ID,
     );
-    console.log(JSON.stringify(channelsPayload));
+    // console.log(JSON.stringify(channelsPayload));
     // @ts-ignore
     let query = channelsPayload.query.bool.filter[1]['query_string'].query;
     let queries = query.split(" AND ");
@@ -99,8 +104,9 @@ export const Realtime = async (dateTime: DateTime, channels: Array<string>, para
 
     // let realTimeDataSourceKey = `KEY_REAL_TIME_DATASOURCE_${dateTime.year}_${dateTime.month}_${dateTime.day}_${channels.sort().join("_")}`;
     let dataSourcesVar: any = await processData(payload); // cache.get(realTimeDataSourceKey, processData(payload));
-    let dataSources = [];
+    let dataSources: any[] = [];
     if (dataSourcesVar) {
+        // console.log("Real Time DataSource", dataSourcesVar);
         dataSources = dataSourcesVar.map((data: any) => processBucket(data))
     }
 

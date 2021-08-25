@@ -7,6 +7,7 @@ export enum FieldType {
     CHANNELS = "channelsName",
     TIMESTAMP = "@timestamp",
     DEVICE_ID = "devicesId",
+    PROFILE_ID = "profilesId"
 }
 
 export enum StreamType {

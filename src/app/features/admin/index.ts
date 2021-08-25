@@ -23,7 +23,7 @@ const prismaClient = new PrismaClient();
 
 const Admin = Router();
 
-const dateTime = getDateTimeNow;
+const dateTime = getDateTimeNow();
 let secondsToExpire = (30 * 60);
 
 const {salt} = config.get("Auth.encrypt");
@@ -339,7 +339,7 @@ Admin.post("/partner/save", authMw, (async (req, res) => {
         const {user} = res.locals;
 
         // TODO-CHECK-USER-CRUD-PARTNER-PERMISSION.
-        if (!user.roles.crudPartners) {
+        if (!user.role.crudPartners) {
             res.status(403).send({user: "user forbidden"}).end();
             return;
         }

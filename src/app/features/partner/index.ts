@@ -15,11 +15,12 @@ import {JoiOrPrismaError} from "../../utils/validate";
 import {getDurationObject} from "../../../shared/constants";
 import {verify} from "../../../auth/jwt";
 import {authPartner} from "../../../routes/middleware";
+import {getDateTimeNow} from "../../../shared/functions";
 
 const Partner = Router();
 const prismaClient = new PrismaClient();
 const {zone} = config.get("Time");
-const dateTime = DateTime.now().setZone(zone);
+const dateTime = getDateTimeNow();
 
 Partner.all("/", (req, res) => res.status(403).json({msg: "Not Allowed", status: 403}));
 

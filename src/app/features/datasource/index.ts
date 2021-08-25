@@ -5,7 +5,7 @@ import {DateTime} from "luxon";
 import Http, {isAxiosErrorRes} from "../../utils/http";
 
 const Datasource = Router();
-const aggIndex = 4;
+const aggIndex = 3;
 const nextAgg = aggIndex - 1;
 const lastAgg = nextAgg - 1
 
@@ -22,7 +22,7 @@ const createEscapedStringFromArray = (input: Array<string>): string => {
     return input.map(item => `"${item}"`).join(" OR ");
 }
 
-export const otherConstData = (channel: Array<string>, vendor: Array<string>, deviceTypes: Array<string>, types: Array<string>, streamTypes: Array<string>, from: string, to: string, interval: string, field: string, cardinality: boolean = true, addHistogram: boolean = true, histogramField?: string, cardinalityField?: string) => {
+export const otherConstData = (channel: Array<string>, vendor: Array<string>, deviceTypes: Array<string>, types: Array<string>, streamTypes: Array<string>, from: string, to: string, interval: string, field: string, cardinality: boolean = true, addHistogram: boolean = true, histogramField?: string, cardinalityField?: string, isRealTime = false) => {
 
 
     let channels = createEscapedStringFromArray(channel);
@@ -30,6 +30,9 @@ export const otherConstData = (channel: Array<string>, vendor: Array<string>, de
     let devices = createEscapedStringFromArray(deviceTypes);
     let castTypes = createEscapedStringFromArray(types);
     let streams = createEscapedStringFromArray(streamTypes);
+    let size = Math.round(Math.random() * 100);
+
+    if (isRealTime) return getRealTimeConfig(from, to, vendors);
 
     const cardinalitySection = cardinality ? {[lastAgg]: {"cardinality": {"field": cardinalityField}}} : {};
     const histogram = addHistogram ? {
@@ -61,17 +64,70 @@ export const otherConstData = (channel: Array<string>, vendor: Array<string>, de
                     {
                         "query_string": {
                             "analyze_wildcard": true,
-                            "query": `vendorsName:(${vendors}) AND devicesType:(${devices}) AND type:(${castTypes}) AND streamType:(${streams}) AND (channelsName:${channels} OR (NOT _exists_: channelsName))`
+                            "query": `vendorsName:(${vendors}) AND devicesType:(${devices}) AND type:(${castTypes}) AND streamType:(${streams}) AND isRenewal:true AND (channelsName:${channels} OR (NOT _exists_: channelsName))`
                         }
                     }]
             }
         },
         "aggs": {
             [aggIndex]: {
-                "terms": {"field": `${field}`, "size": 500, "order": {"_key": "desc"}, "min_doc_count": 1},
+                "terms": {
+                    "field": `${field}`,
+                    "size": size,
+                    "order": {"_key": "desc"},
+                    "min_doc_count": 1
+                },
                 "aggs": {...histogram}
             }
         }
+    }
+}
+
+const getRealTimeConfig = (to: string, from: string, vendors: string) => {
+    return {
+        "aggs": {
+            [aggIndex]: {
+                "aggs": {
+                    [nextAgg]: {
+                        "cardinality": {
+                            "field": FieldType.DEVICE_ID
+                        }
+                    }
+                },
+                "date_histogram": {
+                    "extended_bounds": {
+                        "max": from,
+                        "min": to
+                    },
+                    "field": FieldType.TIMESTAMP,
+                    "format": "epoch_millis",
+                    "interval": Interval.MINUTE,
+                    "min_doc_count": 0
+                }
+            }
+        },
+        "query": {
+            "bool": {
+                "filter": [
+                    {
+                        "range": {
+                            "@timestamp": {
+                                "format": "epoch_millis",
+                                "gte": to,
+                                "lte": from
+                            }
+                        }
+                    },
+                    {
+                        "query_string": {
+                            "analyze_wildcard": true,
+                            "query": `vendorsName:(${vendors})`
+                        }
+                    }
+                ]
+            }
+        },
+        "size": 0
     }
 }
 
@@ -88,10 +144,9 @@ export const processData = async (otherConstData: object) => {
         if (!responses || !responses.length) return [];
         let aggs = responses[0]['aggregations'];
         if (!aggs || aggs.length) return [];
-        let buckets = aggs['4']['buckets'];
-        if (buckets || !buckets.length) return buckets;
-        //console.log("Buckets there")
-        return buckets[0]['3']['buckets'];
+        let buckets = aggs[aggIndex.toString()]['buckets'];
+        return buckets;
+        // return buckets[0][lastAgg.toString()]['buckets'];
     } catch (e) {
         if (e.isAxiosError) {
             let {message, code} = isAxiosErrorRes(e);

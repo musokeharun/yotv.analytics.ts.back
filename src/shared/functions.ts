@@ -9,7 +9,9 @@ export const pErr = (err: Error) => {
 };
 
 const {zone} = config.get("Time");
-export const getDateTimeNow = DateTime.now().setZone(zone);
+export const getDateTimeNow = () => {
+    return DateTime.fromJSDate(new Date()).setZone(zone)
+};
 
 
 export const getRandomInt = () => {
