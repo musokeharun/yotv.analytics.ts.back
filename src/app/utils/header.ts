@@ -1,20 +1,17 @@
 //HEADERS FOR GRAFANA
 const headers = {
-    "Host": "mw.channels256.com",
-    "Connection": "keep-alive",
-    "Pragma": "no-cache",
-    "Cache-Control": "no-cache",
     "accept": "application/json, text/plain, */*",
-    "x-grafana-org-id": "1",
+    "accept-language": "en-UG,en-US;q=0.9,en;q=0.8",
+    "cache-control": "no-cache",
     "content-type": "application/json",
-    "Origin": " https://mw.channels256.com",
-    "Sec-Fetch-Site": "same-origin",
-    "Sec-Fetch-Mode": "cors",
-    "Sec-Fetch-Dest": "empty",
-    Referer: "https://mw.channels256.com/monitoring-statistics/d/motv-middleware/middleware-per-minute?orgId=1&from=now-5m&to=now-1m",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Accept-Language": "en-UG,en-US;q=0.9,en;q=0.8",
-    "Cookie": 'mw_grafana_user=etalemwa@albayanmedia-africa.com; PHPSESSIDMW=72chsn4kta8fk3hk7h23vq10o9; mw_grafana_hash=8cEg8Sov8dHwV5yavEBjAQ; mw_grafana_expires=1631812646'
+    "pragma": "no-cache",
+    "sec-ch-ua": "\" Not;A Brand\";v=\"99\", \"Google Chrome\";v=\"91\", \"Chromium\";v=\"91\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "x-grafana-org-id": "1",
+    "cookie": "_nss=1; SERVERID=middleware; mw_grafana_user=etalemwa@albayanmedia-africa.com; mw_grafana_hash=ESCeUkNOdeIBVuLKHksl_Q; mw_grafana_expires=1632294302; PHPSESSIDMW=cb5fkbt66ra4l17m63u2r3qbo6"
 };
 
 export default headers;
