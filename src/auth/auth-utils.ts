@@ -12,7 +12,7 @@ export const getRolesObject = (): Object => {
 
 export const digestRoles = async (roles: Array<number | string>) => {
     const prismaClient = new PrismaClient();
-    let roleStruct = await prismaClient.$queryRaw("DESC role");
+    let roleStruct = await prismaClient.$queryRaw("DESC Role");
     return roleStruct.slice(3).map(({Field, Type}: any, index: number) => {
         return {
             [Field]: roles[index] || (Type.toLowerCase().startsWith("int") ? 1 : "")

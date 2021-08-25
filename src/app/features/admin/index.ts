@@ -339,7 +339,7 @@ Admin.post("/partner/save", authMw, (async (req, res) => {
         const {user} = res.locals;
 
         // TODO-CHECK-USER-CRUD-PARTNER-PERMISSION.
-        if (!user.role.crudPartners) {
+        if (!user.roles.crudPartners) {
             res.status(403).send({user: "user forbidden"}).end();
             return;
         }
