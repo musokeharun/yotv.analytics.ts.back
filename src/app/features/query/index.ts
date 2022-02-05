@@ -8,6 +8,36 @@ const Query = Router();
 const {url} = config.get("Query");
 
 const refId: string = "A";
+
+const sqlBodyProcessor = <JSON>(from: number, to: number, sql: string) => JSON.stringify(
+    {
+        "queries": [
+            {
+                "refId": refId,
+                "datasource": {
+                    "uid": "mysql",
+                    "type": "mysql"
+                },
+                "rawSql": sql,
+                "format": "table",
+                "datasourceId": 1,
+                "intervalMs": 120000,
+                "maxDataPoints": 5000
+            }
+        ],
+        "range": {
+            "from": from.toString(),
+            "to": to.toString(),
+            "raw": {
+                "from": from.toString(),
+                "to": to.toString()
+            }
+        },
+        "from": from.toString(),
+        "to": to.toString()
+    }
+)
+
 const bodyProcessor = <JSON>(from: number, to: number, sql: string) => JSON.stringify(
     {
         "from": from.toString(),
@@ -22,6 +52,22 @@ const bodyProcessor = <JSON>(from: number, to: number, sql: string) => JSON.stri
         }]
     }
 );
+
+export const processSqlStructure = (data: any): Array<any> => {
+    const result: Array<any> = [];
+    const {results} = data;
+    if (!results) return result;
+    const {frames} = results[refId];
+    if (!frames) return result;
+    const {data: wrap, schema} = frames[0];
+    const meta = schema.fields.map((e: { name: any; }) => e.name);
+    return _.zipWith(...wrap.values, (...rest) => {
+        const user = {};
+        // @ts-ignore
+        rest.forEach((e, index) => (user[meta[index]] = e));
+        return user;
+    });
+}
 
 export const processStructure = (data: any): Array<any> => {
 
@@ -45,7 +91,7 @@ const processToTables = <any>(({results}: { results: any }) => {
     return results[refId]['tables'];
 })
 
-export const processSql = (from: number, to: number, sql: string) => Http(url, bodyProcessor(from, to, sql));
+export const processSql = (from: any, to: any, sql: string) => Http(url, sqlBodyProcessor(from, to, sql));
 
 export const processAndResult = async (from: number, to: number, sql: string) => {
     let {data} = await processSql(from, to, sql);

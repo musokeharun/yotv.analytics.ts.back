@@ -12,7 +12,8 @@
     }
   },
   "Query": {
-    "url": "https://mw.channels256.com/monitoring-statistics/api/tsdb/query"
+    "url": "https://mw.channels256.com/monitoring-statistics/api/ds/query",
+    "url2": "https://mw.channels256.com/monitoring-statistics/api/tsdb/query"
   },
   "Token": {
     "secret": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"

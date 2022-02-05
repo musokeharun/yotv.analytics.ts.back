@@ -11,7 +11,7 @@ const headers = {
     "sec-fetch-mode": "cors",
     "sec-fetch-site": "same-origin",
     "x-grafana-org-id": "1",
-    "cookie": "mw_grafana_user=etalemwa@albayanmedia-africa.com; _nss=1; SERVERID=albayan-middleware01; PHPSESSIDMW=etrmmvq5gepmi4r6amrqb73mm8; mw_grafana_hash=I3a9h6PbpO2ucxWlMKCUqA; mw_grafana_expires=1639572702"
+    "cookie": "_nss=1; SERVERID=middleware; PHPSESSIDMW=tu482oakt3ec8mso6gvm02am9o; mw_grafana_user=etalemwa@albayanmedia-africa.com; mw_grafana_hash=C8zJFMlhrxt2RNMyP5evKA; mw_grafana_expires=1646549419"
 };
 
 export default headers;
